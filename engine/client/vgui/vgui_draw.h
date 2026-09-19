@@ -30,9 +30,20 @@ void VGui_MWheelEvent( int y );
 void VGui_KeyEvent( int key, int down );
 void VGui_MouseMove( int x, int y );
 qboolean VGui_IsActive( void );
-qboolean VGui_IsProvidedByClientDll( void );
 void *VGui_GetPanel( void );
 void VGui_ReportTextInput( const char *text );
 void VGui_UpdateInternalCursorState( VGUI_DefaultCursor cursorType );
+
+//
+// vgui2/vgui2_host.cpp - engine-side VGUI2 host, always available,
+// independent of the legacy VGUI1 support library above.
+//
+void VGui2_HostInit( void );
+void VGui2_HostFrame( void );
+void VGui2_HostShutdown( void );
+void VGui2_HostKey( int key, int down );
+void VGui2_HostMouse( int engineButton, int clicks );
+void VGui2_HostMouseMove( int x, int y );
+void VGui2_HostWheel( int delta );
 
 #endif // VGUI_DRAW_H

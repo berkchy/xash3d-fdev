@@ -350,6 +350,18 @@ public:
 
 	void SetSurface( ISurface *surface ) { m_surface = surface; }
 
+	HScheme AddScheme( const char *tag, CSchemeImpl *scheme )
+	{
+		if ( !scheme )
+			return NULL_HANDLE;
+		HScheme handle = (HScheme)( m_schemes.Count() + 1 );
+		SchemeSlot slot;
+		slot.tag = tag ? tag : "";
+		slot.scheme = scheme;
+		m_schemes.AddToTail( slot );
+		return handle;
+	}
+
 	HScheme LoadSchemeFromFile( const char *fileName, const char *tag ) OVERRIDE
 	{
 		if ( !fileName || !fileName[0] )
@@ -539,5 +551,24 @@ static CSchemeManagerImpl s_SchemeManagerImpl;
 
 ISchemeManager *VGui2_GetSchemeManagerInterface() { return &s_SchemeManagerImpl; }
 void VGui2_SetSchemeSurface( ISurface *surface ) { s_SchemeManagerImpl.SetSurface( surface ); }
+
+HScheme VGui2_LoadSchemeFromBuffer( const char *buffer, const char *tag )
+{
+	if ( !buffer || !buffer[0] )
+		return NULL_HANDLE;
+	KeyValues *kv = new KeyValues( "Scheme" );
+	if ( !kv->LoadFromBuffer( tag ? tag : "memory", buffer, NULL, NULL ))
+	{
+		kv->deleteThis();
+		return NULL_HANDLE;
+	}
+	KeyValues *root = kv->GetFirstSubKey();
+	if ( !root )
+		root = kv;
+	CSchemeImpl *scheme = new CSchemeImpl();
+	scheme->LoadFromKeyValues( root, VGui2_GetSurfaceInterface() );
+	kv->deleteThis();
+	return s_SchemeManagerImpl.AddScheme( tag ? tag : "memory", scheme );
+}
 
 } // namespace vgui2

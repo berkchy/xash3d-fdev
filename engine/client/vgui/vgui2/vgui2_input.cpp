@@ -134,10 +134,6 @@ public:
 			return;
 		}
 		m_mouseOver = FindPanelAt( x, y );
-		if ( m_mouseOver != m_mouseFocus && !IsAnyMouseDown() )
-		{
-			// focus follows mouse when no button held
-		}
 	}
 
 	void PanelDeleted( VPANEL panel ) OVERRIDE
@@ -152,6 +148,16 @@ public:
 	void InternalCursorMoved( int x, int y ) OVERRIDE
 	{
 		UpdateMouseFocus( x, y );
+		// CursorMoved is a MESSAGE_FUNC: Panel::InternalCursorMoved handles
+		// cursor entered/exited transitions internally.
+		if ( m_mouseOver )
+		{
+			KeyValues *kv = new KeyValues( "CursorMoved" );
+			kv->SetInt( "xpos", x );
+			kv->SetInt( "ypos", y );
+			PostToPanel( m_mouseOver, kv );
+			kv->deleteThis();
+		}
 	}
 	void InternalMousePressed( MouseCode code ) OVERRIDE
 	{
@@ -299,14 +305,6 @@ public:
 private:
 	bool ValidMouse( int code ) const { return code >= 0 && code < VGUI2_MAX_MOUSECODE; }
 	bool ValidKey( int code ) const { return code >= 0 && code < VGUI2_MAX_KEYCODE; }
-
-	bool IsAnyMouseDown() const
-	{
-		for ( int i = 0; i < VGUI2_MAX_MOUSECODE; i++ )
-			if ( m_mouseDown[i] )
-				return true;
-		return false;
-	}
 
 	void PostToPanel( VPANEL target, KeyValues *kv )
 	{

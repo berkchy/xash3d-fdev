@@ -63,6 +63,9 @@ typedef struct vgui2_backend_s
 void VGui2_SetBackend( const vgui2_backend_t *backend );
 const vgui2_backend_t *VGui2_GetBackend( void );
 
+// Provided by vgui2_backend_engine.c: installs the real engine backend.
+void VGui2_InitEngineBackend( void );
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

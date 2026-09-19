@@ -62,7 +62,8 @@
 template <typename T>
 inline T AlignValue( T val, unsigned alignment )
 {
-	return (T)( ( (uintptr_t)val + alignment - 1 ) & ~( alignment - 1 ) );
+	uintptr_t mask = (uintptr_t)alignment - 1;
+	return (T)( ( (uintptr_t)val + mask ) & ~mask );
 }
 
 

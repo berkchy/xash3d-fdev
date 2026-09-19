@@ -33,6 +33,9 @@ VPANEL VGui2_GetPanelHandle( int index );
 // scheme <-> surface wiring (vgui2_scheme.cpp)
 void VGui2_SetSchemeSurface( ISurface *surface );
 
+// parse a scheme from a memory buffer (vgui2_scheme.cpp)
+HScheme VGui2_LoadSchemeFromBuffer( const char *buffer, const char *tag );
+
 // KeyValues003 system (vgui2_keyvalues.cpp)
 const char *VGui2_KeyValuesVersion();
 IBaseInterface *VGui2_GetKeyValuesInterface();

@@ -19,6 +19,7 @@
 
 #include "vgui2_backend.h"
 #include "vgui2_internal.h"
+#include "vgui2_internal.h"
 
 namespace vgui2
 {
@@ -444,9 +445,14 @@ public:
 			b->playSound( fileName ? fileName : "" );
 	}
 
-	int GetPopupCount() OVERRIDE { return m_popups.Count(); }
+	int GetPopupCount() OVERRIDE
+	{
+		PrunePopups();
+		return m_popups.Count();
+	}
 	VPANEL GetPopup( int index ) OVERRIDE
 	{
+		PrunePopups();
 		if ( index < 0 || index >= m_popups.Count() )
 			return NULL_HANDLE;
 		return m_popups[index];
@@ -657,6 +663,16 @@ public:
 	}
 
 private:
+	void PrunePopups()
+	{
+		IPanel *ip = VGui2_GetPanelInterface();
+		for ( int i = 0; i < m_popups.Count(); )
+		{
+			if ( !ip->Client( m_popups[i] ))
+				m_popups.Remove( i );
+			else i++;
+		}
+	}
 	void DrawTexturedRectUV( int x0, int y0, int x1, int y1, float s0, float t0, float s1, float t1 )
 	{
 		SurfaceTexture *t = GetTexture( m_curTexture );

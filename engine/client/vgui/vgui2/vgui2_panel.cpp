@@ -10,12 +10,14 @@
 #include <vgui/IPanel.h>
 #include <vgui/IVGui.h>
 #include <vgui/IClientPanel.h>
+#include <vgui/IInputInternal.h>
 #include <vgui/IScheme.h>
 #include <KeyValues.h>
 #include <tier1/utlvector.h>
 #include <tier1/strtools.h>
 
 #include "vgui2_backend.h"
+#include "vgui2_internal.h"
 
 namespace vgui2
 {
@@ -99,6 +101,8 @@ public:
 		p->children.Purge();
 		p->used = false;
 		p->client = NULL;
+		if ( VGui2_GetInputInterface() )
+			VGui2_GetInputInterface()->PanelDeleted( vpanel );
 	}
 
 	void GetAbsPos( VPANEL vpanel, int &x, int &y )

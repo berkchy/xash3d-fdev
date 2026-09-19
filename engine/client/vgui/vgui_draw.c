@@ -401,6 +401,9 @@ VGui_Startup
 */
 void VGui_Startup( int width, int height )
 {
+	// engine-side VGUI2 host is always available (idempotent)
+	VGui2_HostInit();
+
 	// vgui not initialized from both support and client modules, skip
 	if( !vgui.initialized )
 		return;
@@ -429,6 +432,8 @@ Unload vgui_support library and call VGui_Shutdown
 */
 void VGui_Shutdown( void )
 {
+	VGui2_HostShutdown();
+
 	if( vgui.dllFuncs.Shutdown )
 		vgui.dllFuncs.Shutdown();
 
@@ -570,6 +575,8 @@ void VGui_MouseEvent( int key, int clicks )
 	enum VGUI_MouseAction mact;
 	enum VGUI_MouseCode   code;
 
+	VGui2_HostMouse( key, clicks );
+
 	if( !vgui.dllFuncs.Mouse )
 		return;
 
@@ -593,6 +600,8 @@ void VGui_MouseEvent( int key, int clicks )
 
 void VGui_MWheelEvent( int y )
 {
+	VGui2_HostWheel( y );
+
 	if( !vgui.dllFuncs.Mouse )
 		return;
 
@@ -602,6 +611,8 @@ void VGui_MWheelEvent( int y )
 void VGui_KeyEvent( int key, int down )
 {
 	enum VGUI_KeyCode code;
+
+	VGui2_HostKey( key, down );
 
 	if( !vgui.dllFuncs.Key )
 		return;
@@ -625,6 +636,9 @@ void VGui_KeyEvent( int key, int down )
 
 void VGui_MouseMove( int x, int y )
 {
+	// x, y are raw screen pixels here (callers pass Platform_GetMousePos)
+	VGui2_HostMouseMove( x, y );
+
 	if( vgui.dllFuncs.MouseMove )
 	{
 		float xscale = (float)refState.width / (float)clgame.scrInfo.iWidth;
@@ -637,6 +651,9 @@ void VGui_Paint( void )
 {
 	if( vgui.dllFuncs.Paint )
 		vgui.dllFuncs.Paint();
+
+	// engine-side VGUI2 host paints on top (demo dialog when enabled)
+	VGui2_HostFrame();
 
 	// don't trust the support library to leave it clean, everything drawn afterwards is in screen space
 	VGUI_SetPaintOffset( 0, 0 );
