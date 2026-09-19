@@ -12,7 +12,7 @@
 #include <vgui/IPanel.h>
 #include <vgui/IInput.h>
 #include <vgui/IInputInternal.h>
-#include <color.h>
+#include <Color.h>
 #include <tier1/utlvector.h>
 #include <tier1/utlstring.h>
 #include <tier1/strtools.h>

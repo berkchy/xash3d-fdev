@@ -10,7 +10,7 @@
 #include <vgui/IImage.h>
 #include <vgui/IPanel.h>
 #include <vgui/VGUI2.h>
-#include <color.h>
+#include <Color.h>
 #include <KeyValues.h>
 #include <tier1/utlvector.h>
 #include <tier1/utlstring.h>

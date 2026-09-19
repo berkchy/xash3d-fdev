@@ -51,8 +51,9 @@ def build(bld):
 
 	if bld.env.DEST_OS in ['win32', 'dos']:
 		# Valve sources expect WIN32 (no underscore) project-wide on Windows,
-		# plus WIN64 on 64-bit Windows.
-		defines += ['WIN32']
+		# plus WIN64 on 64-bit Windows. STEAM_API_NODLL because we statically
+		# link our own Steam stubs (dllimport functions cannot be defined).
+		defines += ['WIN32', 'STEAM_API_NODLL']
 		if bld.env.DEST_SIZEOF_VOID_P and int( bld.env.DEST_SIZEOF_VOID_P ) > 4:
 			defines += ['WIN64']
 		dll_ext = '.dll'
