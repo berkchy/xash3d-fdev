@@ -760,7 +760,7 @@ extern "C" {
 		CWrap mpath( path, bAllowBasenameMismatch );
 
 		// fopen64 does not exist on bionic/musl; plain fopen is already 64-bit there
-#if defined(__BIONIC__) || defined(__musl__) || defined(_WIN32)
+#if defined(__ANDROID__) || defined(__BIONIC__) || defined(__musl__) || defined(_WIN32)
 		return CALL(fopen)( mpath, mode );
 #else
 		return CALL(fopen64)( mpath, mode );
@@ -778,7 +778,7 @@ extern "C" {
 	{
 		bool bAllowBasenameMismatch = ((flags & (O_WRONLY | O_RDWR)) != 0);
 		CWrap mpath( pathname, bAllowBasenameMismatch );
-#if defined(__BIONIC__) || defined(__musl__) || defined(_WIN32)
+#if defined(__ANDROID__) || defined(__BIONIC__) || defined(__musl__) || defined(_WIN32)
 		return CALL(open)( mpath, flags, mode );
 #else
 		return CALL(open64)( mpath, flags, mode );

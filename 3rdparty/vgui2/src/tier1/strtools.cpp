@@ -47,7 +47,13 @@
 #include <stdarg.h>
 
 #ifdef POSIX
+// The Android NDK does not expose iconv below API 28; provide manual
+// UCS-2/UTF-32/UTF-8 conversions instead (all trivial fixed transforms).
+#if defined( __ANDROID__ )
+#define VGUI2_NO_ICONV 1
+#else
 #include <iconv.h>
+#endif
 #include <ctype.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -1404,6 +1410,25 @@ int _V_UCS2ToUnicode( const ucs2 *pUCS2, wchar_t *pUnicode, int cubDestSizeInByt
 #ifdef _WIN32
 	int cchResult = V_wcslen( pUCS2 );
 	V_memcpy( pUnicode, pUCS2, cubDestSizeInBytes );
+#elif defined( VGUI2_NO_ICONV )
+	// manual UCS-2LE -> wchar_t (UTF-32 on POSIX) with surrogate support
+	int cchResult = 0;
+	{
+		int maxChars = cubDestSizeInBytes / (int)sizeof( wchar_t );
+		int in = 0, out = 0;
+		while ( out + 1 < maxChars )
+		{
+			unsigned int unit = pUCS2[in];
+			if ( !unit )
+				break;
+			in++;
+			if ( unit >= 0xD800 && unit <= 0xDBFF && pUCS2[in] >= 0xDC00 && pUCS2[in] <= 0xDFFF )
+				unit = 0x10000 + (( unit - 0xD800 ) << 10 ) + ( pUCS2[in++] - 0xDC00 );
+			pUnicode[out++] = (wchar_t)unit;
+		}
+		pUnicode[out] = 0;
+		cchResult = out;
+	}
 #else
 	iconv_t conv_t = iconv_open( "UCS-4LE", "UCS-2LE" );
 	int cchResult = -1;
@@ -1445,6 +1470,34 @@ int _V_UnicodeToUCS2( const wchar_t *pUnicode, int cubSrcInBytes, char *pUCS2, i
 	wcsncpy( pDest, pUnicode, cchResult );
 	// Make sure we NULL-terminate.
 	pDest[ cchResult - 1 ] = 0;
+#elif defined( VGUI2_NO_ICONV )
+	// manual wchar_t -> UCS-2LE with surrogate generation
+	int cchResult = 0;
+	{
+		int maxUnits = cubDestSizeInBytes / (int)sizeof( ucs2 );
+		int srcChars = cubSrcInBytes / (int)sizeof( wchar_t );
+		int out = 0;
+		ucs2 *dst = (ucs2 *)pUCS2;
+		for ( int i = 0; i < srcChars && out + 1 < maxUnits; i++ )
+		{
+			unsigned int ch = (unsigned int)pUnicode[i];
+			if ( !ch )
+				break;
+			if ( ch < 0x10000 )
+			{
+				dst[out++] = (ucs2)ch;
+			}
+			else if ( ch <= 0x10FFFF && out + 2 < maxUnits )
+			{
+				ch -= 0x10000;
+				dst[out++] = (ucs2)( 0xD800 + ( ch >> 10 ));
+				dst[out++] = (ucs2)( 0xDC00 + ( ch & 0x3FF ));
+			}
+			else dst[out++] = (ucs2)'?';
+		}
+		dst[out] = 0;
+		cchResult = out;
+	}
 #elif defined (POSIX)
 	iconv_t conv_t = iconv_open( "UCS-2LE", "UTF-32LE" );
 	size_t cchResult = -1;
@@ -1481,6 +1534,40 @@ int _V_UCS2ToUTF8( const ucs2 *pUCS2, char *pUTF8, int cubDestSizeInBytes )
 #ifdef _WIN32
 	// under win32 wchar_t == ucs2, sigh
 	int cchResult = WideCharToMultiByte( CP_UTF8, 0, pUCS2, -1, pUTF8, cubDestSizeInBytes, NULL, NULL );
+#elif defined( VGUI2_NO_ICONV )
+	// manual UCS-2LE -> UTF-8
+	int cchResult = 0;
+	{
+		int out = 0;
+		int in = 0;
+		while ( out + 1 < cubDestSizeInBytes )
+		{
+			unsigned int ch = pUCS2[in];
+			if ( !ch )
+				break;
+			in++;
+			if ( ch >= 0xD800 && ch <= 0xDBFF && pUCS2[in] >= 0xDC00 && pUCS2[in] <= 0xDFFF )
+				ch = 0x10000 + (( ch - 0xD800 ) << 10 ) + ( pUCS2[in++] - 0xDC00 );
+			if ( ch < 0x80 )
+			{
+				pUTF8[out++] = (char)ch;
+			}
+			else if ( ch < 0x800 && out + 2 <= cubDestSizeInBytes )
+			{
+				pUTF8[out++] = (char)( 0xC0 | ( ch >> 6 ));
+				pUTF8[out++] = (char)( 0x80 | ( ch & 0x3F ));
+			}
+			else if ( out + 3 < cubDestSizeInBytes )
+			{
+				pUTF8[out++] = (char)( 0xE0 | ( ch >> 12 ));
+				pUTF8[out++] = (char)( 0x80 | (( ch >> 6 ) & 0x3F ));
+				pUTF8[out++] = (char)( 0x80 | ( ch & 0x3F ));
+			}
+			else break;
+		}
+		pUTF8[out] = 0;
+		cchResult = out;
+	}
 #elif defined(POSIX)
 	iconv_t conv_t = iconv_open( "UTF-8", "UCS-2LE" );
 	size_t cchResult = -1;
@@ -1540,6 +1627,52 @@ int _V_UTF8ToUCS2( const char *pUTF8, int cubSrcInBytes, ucs2 *pUCS2, int cubDes
 #elif defined( _PS3 ) // bugbug JLB
 	int cchResult = 0;
 	Assert( 0 );
+#elif defined( VGUI2_NO_ICONV )
+	// manual UTF-8 -> UCS-2LE with surrogate generation
+	int cchResult = 0;
+	{
+		int maxUnits = cubDestSizeInBytes / (int)sizeof( ucs2 );
+		const unsigned char *s = (const unsigned char *)pUTF8;
+		const unsigned char *end = s + cubSrcInBytes;
+		int out = 0;
+		while ( s < end && *s && out + 1 < maxUnits )
+		{
+			unsigned int ch;
+			if ( *s < 0x80 )
+			{
+				ch = *s++;
+			}
+			else if (( *s & 0xE0 ) == 0xC0 && s + 1 < end )
+			{
+				ch = (( *s & 0x1F ) << 6 ) | ( s[1] & 0x3F );
+				s += 2;
+			}
+			else if (( *s & 0xF0 ) == 0xE0 && s + 2 < end )
+			{
+				ch = (( *s & 0x0F ) << 12 ) | (( s[1] & 0x3F ) << 6 ) | ( s[2] & 0x3F );
+				s += 3;
+			}
+			else if (( *s & 0xF8 ) == 0xF0 && s + 3 < end )
+			{
+				ch = (( *s & 0x07 ) << 18 ) | (( s[1] & 0x3F ) << 12 ) | (( s[2] & 0x3F ) << 6 ) | ( s[3] & 0x3F );
+				s += 4;
+			}
+			else { ch = '?'; s++; }
+			if ( ch < 0x10000 )
+			{
+				pUCS2[out++] = (ucs2)ch;
+			}
+			else if ( ch <= 0x10FFFF && out + 2 < maxUnits )
+			{
+				ch -= 0x10000;
+				pUCS2[out++] = (ucs2)( 0xD800 + ( ch >> 10 ));
+				pUCS2[out++] = (ucs2)( 0xDC00 + ( ch & 0x3FF ));
+			}
+			else pUCS2[out++] = (ucs2)'?';
+		}
+		pUCS2[out] = 0;
+		cchResult = out;
+	}
 #elif defined(POSIX)
 	iconv_t conv_t = iconv_open( "UCS-2LE", "UTF-8" );
 	size_t cchResult = -1;

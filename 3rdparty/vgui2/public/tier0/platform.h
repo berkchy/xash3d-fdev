@@ -13,6 +13,10 @@
 #include "basetypes.h"
 #include "tier0/valve_off.h"
 
+#if defined( _MSC_VER ) && !defined( _M_IX86 )
+#include <intrin.h>
+#endif
+
 #ifdef _WIN32
 #pragma once
 #endif
@@ -293,7 +297,11 @@ typedef void * HINSTANCE;
 
 // Used to step into the debugger
 #ifdef _WIN32
+#if defined( _M_IX86 )
 #define DebuggerBreak()  __asm { int 3 }
+#else
+#define DebuggerBreak()  __debugbreak()
+#endif
 #else
 #define DebuggerBreak()  {}
 #endif
@@ -596,9 +604,10 @@ typedef void *HANDLE;
 
 inline void SetupFPUControlWordForceExceptions()
 {
+#if defined( _M_IX86 )
 	// use local to get and store control word
-	uint16 tmpCtrlW;              
-	__asm 
+	uint16 tmpCtrlW;
+	__asm
 	{
 		fnclex                     /* clear all current exceptions */
 		fnstcw word ptr [tmpCtrlW] /* get current control word */
@@ -606,6 +615,9 @@ inline void SetupFPUControlWordForceExceptions()
 		or [tmpCtrlW],   0230h     /* set to 53-bit, mask only inexact, underflow */
 		fldcw word ptr [tmpCtrlW]  /* put new control word in FPU */
 	}
+#else
+	// x64/ARM64 have no x87 control word; SSE MXCSR keeps OS defaults
+#endif
 }
 
 #ifdef CHECK_FLOAT_EXCEPTIONS
@@ -619,6 +631,7 @@ inline void SetupFPUControlWord()
 
 inline void SetupFPUControlWord()
 {
+#if defined( _M_IX86 )
 	// use local to get and store control word
 	uint16 tmpCtrlW;
 	__asm 
@@ -628,6 +641,9 @@ inline void SetupFPUControlWord()
 		or [tmpCtrlW],   023Fh     /* set to 53-bit, mask only inexact, underflow */
 		fldcw word ptr [tmpCtrlW]  /* put new control word in FPU */
 	}
+#else
+	// x64/ARM64 have no x87 control word; SSE MXCSR keeps OS defaults
+#endif
 }
 
 #endif
@@ -679,9 +695,16 @@ inline T DWordSwapC( T dw )
 
 #ifdef _MSC_VER
 
+#if defined( _M_IX86 )
 #define WordSwap  WordSwapAsm
 #define DWordSwap DWordSwapAsm
+#else
+// x64/ARM64 MSVC has no inline asm; use the portable C versions
+#define WordSwap  WordSwapC
+#define DWordSwap DWordSwapC
+#endif
 
+#if defined( _M_IX86 )
 #pragma warning(push)
 #pragma warning (disable:4035) // no return value
 
@@ -706,13 +729,16 @@ inline T DWordSwapAsm( T dw )
 }
 
 #pragma warning(pop)
+#endif // _M_IX86
 
+#if defined( _M_IX86 )
 // The assembly implementation is not compatible with floats
 template <>
 inline float DWordSwapAsm<float>( float f )
 {
 	return DWordSwapC( f );
 }
+#endif // _M_IX86
 
 #else
 

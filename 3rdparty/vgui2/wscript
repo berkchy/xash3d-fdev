@@ -45,6 +45,8 @@ def build(bld):
 	defines = ['NO_MALLOC_OVERRIDE', 'MATHLIB_HEADER_ONLY', 'TIER1_STATIC_LIB']
 
 	if bld.env.DEST_OS in ['win32', 'dos']:
+		# Valve sources expect WIN32 (no underscore) project-wide on Windows
+		defines += ['WIN32']
 		dll_ext = '.dll'
 	else:
 		defines += ['GNUC', 'POSIX', 'LINUX', '_LINUX']
