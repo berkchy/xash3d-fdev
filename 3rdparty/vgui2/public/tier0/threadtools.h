@@ -95,10 +95,18 @@ TT_INTERFACE bool ThreadInMainThread();
 
 inline void ThreadPause()
 {
-#ifdef _WIN32
+#if defined( _WIN32 ) && defined( _M_IX86 )
 	__asm pause;
-#elif POSIX
-	__asm __volatile("pause");
+#elif defined( _WIN32 ) && ( defined( _M_X64 ) || defined( _M_IX86 ))
+	_mm_pause(); // <intrin.h> via tier0/platform.h
+#elif defined( _WIN32 )
+	__yield(); // ARM64, <intrin.h> via tier0/platform.h
+#elif defined( POSIX ) && ( defined( __i386__ ) || defined( __x86_64__ ) )
+	__asm__ __volatile__( "pause" );
+#elif defined( POSIX ) && ( defined( __aarch64__ ) || defined( __arm__ ) )
+	__asm__ __volatile__( "yield" );
+#elif defined( POSIX )
+	// no spin hint available on this architecture
 #else
 #error "implement me"
 #endif

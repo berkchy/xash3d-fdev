@@ -7,10 +7,12 @@
 #include <dlfcn.h>
 #endif
 
-#include <fstream>
+#include <cstdio>
+#include <cstring>
 #include <string>
 #include <tier0/dbg.h>
 #include <tier1/interface.h>
+#include <tier1/strtools.h>
 #include <tier2/tier2.h>
 #include <steam/steam_api.h>
 
@@ -71,40 +73,44 @@ void LoadSteamClient017()
 	}
 #elif defined(LINUX)
 	// steamclient.so should be loaded by steam_api
-	std::string libpath;
-	try
+	// NOTE: stdio is used instead of iostream here so this TU never
+	// requires a C++ standard library with iostream support (Android).
+	char libpath[1024] = { 0 };
 	{
 		// Check /proc/self/maps to find full path to steamclient.so.
-		std::ifstream file;
-		file.exceptions(std::ios::failbit | std::ios::badbit);
-		file.open("/proc/self/maps");
-
-		std::string line;
-		std::string libname = "steamclient.so";
-		while (std::getline(file, line))
+		FILE *file = fopen( "/proc/self/maps", "r" );
+		if ( !file )
 		{
-			if (line.size() >= libname.size() &&
-			    std::string_view(line).substr(line.size() - libname.size()) == libname)
+			Warning( "Failed to read /proc/self/maps\n" );
+			return;
+		}
+		static const char libname[] = "steamclient.so";
+		static const size_t libnamelen = sizeof( libname ) - 1;
+		char line[2048];
+		while ( fgets( line, sizeof( line ), file ) )
+		{
+			size_t len = strlen( line );
+			while ( len > 0 && ( line[len-1] == '\n' || line[len-1] == '\r' ) )
+				line[--len] = 0;
+			if ( len >= libnamelen &&
+			     memcmp( line + len - libnamelen, libname, libnamelen ) == 0 )
 			{
-				size_t idx = line.find_last_of(' ');
-				libpath = line.substr(idx + 1);
+				const char *sep = strrchr( line, ' ' );
+				const char *path = sep ? sep + 1 : line;
+				Q_strncpy( libpath, path, sizeof( libpath ));
 				break;
 			}
 		}
-	}
-	catch (const std::exception &e)
-	{
-		Warning("Failed to read /proc/self/maps: %s\n", e.what());
-		return;
+		fclose( file );
 	}
 
-	if (libpath.empty())
+	if ( !libpath[0] )
 	{
 		Warning("Failed to get full path to steamclient.so\n");
 		return;
 	}
 
-	steamClientModule = Sys_LoadModule(libpath.c_str());
+	steamClientModule = Sys_LoadModule(libpath);
 #elif defined(OSX)
 	std::string target_process("steam_osx");
 	

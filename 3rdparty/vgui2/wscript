@@ -39,10 +39,16 @@ def build(bld):
 	source += bld.path.ant_glob([
 		'public/filesystem_helpers.cpp',
 		'public/vgui_controls/vgui_controls.cpp',
-		'runtime/*.cpp',
 	])
+	# NOTE: runtime/vgui2_memalloc.cpp is NOT part of this target: it needs
+	# the real IMemAlloc declaration, which is only visible WITHOUT
+	# NO_MALLOC_OVERRIDE. The engine builds it via the vgui2engine objects
+	# (see engine/wscript), which also provide g_pMemAlloc for everyone.
+	for f in bld.path.ant_glob('runtime/*.cpp'):
+		if f.name != 'vgui2_memalloc.cpp':
+			source.append(f)
 
-	defines = ['NO_MALLOC_OVERRIDE', 'MATHLIB_HEADER_ONLY', 'TIER1_STATIC_LIB']
+	defines = ['NO_MALLOC_OVERRIDE', 'MATHLIB_HEADER_ONLY', 'TIER1_STATIC_LIB', 'STATIC_TIER0']
 
 	# MSVC does not predefine __x86_64__; like BugfixedHL's CMake, define
 	# X64BITS from the pointer size so platform.h and steamtypes.h agree.

@@ -262,12 +262,11 @@ def build(bld):
 			libs.append('AVUTIL')
 			libs.append('SWSCALE')
 
-		# add client files
+	# add client files
 		if not bld.env.DEDICATED:
 			source += bld.path.ant_glob('client/**/*.c')
-			source += bld.path.ant_glob('client/vgui/vgui2/*.cpp')
-			libs += ['bzip2', 'MultiEmulator', 'opus', 'opusfile', 'vorbis', 'vorbisfile', 'vgui2']
-			# vgui2 public headers for the engine-side interfaces above.
+			libs += ['bzip2', 'MultiEmulator', 'opus', 'opusfile', 'vorbis', 'vorbisfile', 'vgui2', 'vgui2engine']
+			# vgui2 public headers for the engine-side interfaces below.
 			# Explicit (in addition to use=vgui2 export_includes) so the
 			# compile flags never depend on use-propagation alone.
 			# ORDER MATTERS: repo-root common/ first, otherwise Valve's
@@ -275,6 +274,36 @@ def build(bld):
 			includes += ['../common',
 				'../3rdparty/vgui2/public', '../3rdparty/vgui2/public/tier0',
 				'../3rdparty/vgui2/public/tier1', '../3rdparty/vgui2/public/common']
+
+		# Engine-side VGUI2 interfaces + IMemAlloc. Built WITHOUT
+		# NO_MALLOC_OVERRIDE (unlike the static lib above) so Valve's
+		# IMemAlloc/g_pMemAlloc declarations stay visible; vgui2_memalloc.cpp
+		# provides the g_pMemAlloc definition. The C backend stays in the
+		# main engine sources (picked up by client/**/*.c).
+		if not bld.env.DEDICATED:
+			vgui2eng_defines = ['MATHLIB_HEADER_ONLY', 'TIER1_STATIC_LIB', 'STATIC_TIER0']
+			if bld.env.DEST_SIZEOF_VOID_P and int( bld.env.DEST_SIZEOF_VOID_P ) > 4:
+				vgui2eng_defines += ['X64BITS']
+			if bld.env.DEST_OS in ['win32', 'dos']:
+				vgui2eng_defines += ['WIN32', 'STEAM_API_NODLL']
+				if bld.env.DEST_SIZEOF_VOID_P and int( bld.env.DEST_SIZEOF_VOID_P ) > 4:
+					vgui2eng_defines += ['WIN64']
+			else:
+				vgui2eng_defines += ['GNUC', 'POSIX']
+				if bld.env.DEST_OS == 'darwin':
+					vgui2eng_defines += ['OSX']
+				else:
+					vgui2eng_defines += ['LINUX', '_LINUX']
+			bld.objects(
+				source = bld.path.ant_glob('client/vgui/vgui2/vgui2_*.cpp') + \
+					bld.path.ant_glob('../../3rdparty/vgui2/runtime/vgui2_memalloc.cpp'),
+				target = 'vgui2engine',
+				includes = includes + ['../3rdparty/vgui2/public', '../3rdparty/vgui2/public/tier0',
+					'../3rdparty/vgui2/public/tier1', '../3rdparty/vgui2/public/common',
+					'client/vgui/vgui2'],
+				defines = vgui2eng_defines,
+				features = 'cxx',
+			)
 
 		# Android port is linked differently
 		if bld.env.DEST_OS == 'android':
