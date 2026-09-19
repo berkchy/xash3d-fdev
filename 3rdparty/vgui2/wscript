@@ -55,6 +55,14 @@ def build(bld):
 
 	defines += ['_DLL_EXT=' + dll_ext]
 
+	# MSVC: vgui message maps reinterpret member function pointers across
+	# virtually-inherited classes (Panel); this needs the general-purpose
+	# member pointer representation.
+	# NOTE: no -fno-rtti: vgui_controls uses dynamic_cast in several places.
+	cxxflags = []
+	if bld.env.DEST_OS in ['win32', 'dos']:
+		cxxflags = ['/vmg']
+
 	bld.stlib(
 		source = source,
 		target = 'vgui2',
@@ -62,5 +70,5 @@ def build(bld):
 		export_includes = ['public', 'public/tier0', 'public/tier1', 'public/common'],
 		defines = defines,
 		features = 'cxx',
-		cxxflags = '-fno-rtti',
+		cxxflags = cxxflags,
 	)

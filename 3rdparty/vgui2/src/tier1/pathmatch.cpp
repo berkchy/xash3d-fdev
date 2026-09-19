@@ -759,7 +759,12 @@ extern "C" {
 		bool bAllowBasenameMismatch = strpbrk( mode, "wa+" ) != NULL;
 		CWrap mpath( path, bAllowBasenameMismatch );
 
+		// fopen64 does not exist on bionic/musl; plain fopen is already 64-bit there
+#if defined(__BIONIC__) || defined(__musl__) || defined(_WIN32)
+		return CALL(fopen)( mpath, mode );
+#else
 		return CALL(fopen64)( mpath, mode );
+#endif
 	}
 
 	WRAP(open, int, const char *pathname, int flags, mode_t mode)
@@ -773,7 +778,11 @@ extern "C" {
 	{
 		bool bAllowBasenameMismatch = ((flags & (O_WRONLY | O_RDWR)) != 0);
 		CWrap mpath( pathname, bAllowBasenameMismatch );
+#if defined(__BIONIC__) || defined(__musl__) || defined(_WIN32)
+		return CALL(open)( mpath, flags, mode );
+#else
 		return CALL(open64)( mpath, flags, mode );
+#endif
 	}
 
 	int wrap_creat(const char *pathname, mode_t mode)

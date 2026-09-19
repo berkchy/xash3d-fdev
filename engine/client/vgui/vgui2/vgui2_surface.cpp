@@ -6,6 +6,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
 
 #include <vgui/ISurface.h>
 #include <vgui/IPanel.h>
