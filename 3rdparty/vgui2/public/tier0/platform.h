@@ -53,6 +53,9 @@
 #if defined( __linux__ ) && !defined( LINUX )
 #define LINUX 1
 #endif
+#if defined( __linux__ ) && !defined( _LINUX )
+#define _LINUX 1
+#endif
 #if defined( __APPLE__ ) && !defined( OSX )
 #define OSX 1
 #endif
@@ -394,7 +397,7 @@ typedef void * HINSTANCE;
 //-----------------------------------------------------------------------------
 #if defined( GNUC )
 	#define stackalloc( _size )		alloca( ALIGN_VALUE( _size, 16 ) )
-#ifdef _LINUX
+#if defined( _LINUX ) || defined( __ANDROID__ ) || defined( __linux__ )
 	#define mallocsize( _p )	( malloc_usable_size( _p ) )
 #elif defined(OSX)
 	#define mallocsize( _p )	( malloc_size( _p ) )

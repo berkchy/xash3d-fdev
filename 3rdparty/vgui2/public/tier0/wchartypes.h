@@ -20,6 +20,12 @@
 // Temporarily turn off Valve defines
 #include "tier0/valve_off.h"
 
+// platform.h normally provides these, but this header can be reached first
+// (e.g. via VGUI2.h); detect the compiler platform here as well.
+#if defined( __GNUC__ ) && !defined( GNUC )
+#define GNUC 1
+#endif
+
 #if !defined(_WCHAR_T_DEFINED) && !defined(GNUC)
 typedef unsigned short wchar_t;
 #define _WCHAR_T_DEFINED
