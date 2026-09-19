@@ -1,0 +1,66 @@
+#! /usr/bin/env python
+# encoding: utf-8
+#
+# Valve VGUI2 (GoldSource) static library.
+# Built from source: vgui_controls + tier1 + tier2 + key translation +
+# filesystem helpers + runtime shims (tier0/vstdlib/steam replacements).
+# Linked statically into the engine; dedicated servers skip it.
+
+VGUI2_EXCLUDE = [
+	'CircularProgressBar', 'consoledialog',
+	'CvarToggleCheckButton', 'cvarToggleCheckButton', 'cvartogglecheckbutton',
+	'FileOpenStateMachine', 'PerforceFileExplorer', 'PerforceFileList',
+	'perforcefilelistframe', 'RotatingProgressBar', 'ScalableImagePanel',
+	'subrectimage',
+]
+
+TIER1_EXCLUDE = ['fileio.cpp', 'undiff.cpp']
+
+def options(opt):
+	pass
+
+def configure(conf):
+	pass
+
+def build(bld):
+	if bld.env.DEDICATED or not bld.env.CLIENT:
+		return
+
+	source = bld.path.ant_glob('core/src/*.cpp')
+	for f in bld.path.ant_glob('core/vgui_controls/*.cpp'):
+		if f.name[:-4] not in VGUI2_EXCLUDE:
+			source.append(f)
+
+	for f in bld.path.ant_glob('src/tier1/*.cpp'):
+		if f.name not in TIER1_EXCLUDE:
+			source.append(f)
+
+	source += bld.path.ant_glob('src/tier2/*.cpp')
+	source += bld.path.ant_glob([
+		'public/filesystem_helpers.cpp',
+		'public/vgui_controls/vgui_controls.cpp',
+		'runtime/*.cpp',
+	])
+
+	defines = ['NO_MALLOC_OVERRIDE', 'MATHLIB_HEADER_ONLY', 'TIER1_STATIC_LIB']
+
+	if bld.env.DEST_OS in ['win32', 'dos']:
+		dll_ext = '.dll'
+	else:
+		defines += ['GNUC', 'POSIX', 'LINUX', '_LINUX']
+		if bld.env.DEST_OS == 'darwin':
+			dll_ext = '.dylib'
+		else:
+			dll_ext = '.so'
+
+	defines += ['_DLL_EXT=' + dll_ext]
+
+	bld.stlib(
+		source = source,
+		target = 'vgui2',
+		includes = ['public', 'public/tier0', 'public/tier1', 'public/common', '.'],
+		export_includes = ['public', 'public/tier0', 'public/tier1', 'public/common'],
+		defines = defines,
+		features = 'cxx',
+		cxxflags = '-fno-rtti',
+	)

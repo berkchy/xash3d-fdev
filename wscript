@@ -134,6 +134,7 @@ SUBDIRS = [
 	Subproject('3rdparty/freevgui',     lambda x: x.env.CLIENT and x.env.DEST_OS in ['win32', 'linux', 'darwin'] and x.env.DEST_CPU == 'x86'),
 
 	Subproject('3rdparty/MultiEmulator',lambda x: x.env.CLIENT),
+	Subproject('3rdparty/vgui2',        lambda x: x.env.CLIENT and not x.env.DEDICATED),
 	Subproject('stub/client',           lambda x: x.env.CLIENT),
 	Subproject('game_launch',           lambda x: x.env.LAUNCHER),
 	Subproject('engine'), # keep latest for static linking
