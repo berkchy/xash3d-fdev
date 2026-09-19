@@ -41,6 +41,22 @@
 // need this for memset
 #include <string.h>
 
+// Auto-detect the compiler platform when the build system does not pass
+// explicit -DGNUC/-DPOSIX/-DLINUX (e.g. engine targets that only set their
+// own defines). Compiler predefines are the ground truth here.
+#if defined( __GNUC__ ) && !defined( GNUC )
+#define GNUC 1
+#endif
+#if ( defined( __linux__ ) || defined( __ANDROID__ ) || defined( __APPLE__ ) || defined( __FreeBSD__ ) || defined( __NetBSD__ ) || defined( __OpenBSD__ )) && !defined( POSIX )
+#define POSIX 1
+#endif
+#if defined( __linux__ ) && !defined( LINUX )
+#define LINUX 1
+#endif
+#if defined( __APPLE__ ) && !defined( OSX )
+#define OSX 1
+#endif
+
 #ifdef _RETAIL
 #define IsRetail() true 
 #else

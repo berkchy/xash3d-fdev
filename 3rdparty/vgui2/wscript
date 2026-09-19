@@ -49,10 +49,12 @@ def build(bld):
 		defines += ['WIN32']
 		dll_ext = '.dll'
 	else:
-		defines += ['GNUC', 'POSIX', 'LINUX', '_LINUX']
+		defines += ['GNUC', 'POSIX']
 		if bld.env.DEST_OS == 'darwin':
+			defines += ['OSX']
 			dll_ext = '.dylib'
 		else:
+			defines += ['LINUX', '_LINUX']
 			dll_ext = '.so'
 
 	defines += ['_DLL_EXT=' + dll_ext]
