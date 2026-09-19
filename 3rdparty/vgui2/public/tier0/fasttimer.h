@@ -269,7 +269,7 @@ inline void CCycleCount::Init( int64 cycles )
 inline void CCycleCount::Sample()
 {
 	unsigned long* pSample = (unsigned long *)&m_Int64;
-#ifdef _WIN32
+#if defined( _WIN32 ) && defined( _M_IX86 )
 	__asm
 	{
 		// force the cpu to synchronize the instruction queue
@@ -282,6 +282,8 @@ inline void CCycleCount::Sample()
 		mov		[ecx],     eax
 		mov		[ecx+4],   edx
 	}
+#elif defined( _WIN32 )
+	m_Int64 = (int64)__rdtsc();
 #elif defined(__aarch64__)
 	uint64 tsc;
 	__asm__ __volatile__( "mrs %0, cntvct_el0" : "=r" (tsc) );

@@ -44,6 +44,11 @@ def build(bld):
 
 	defines = ['NO_MALLOC_OVERRIDE', 'MATHLIB_HEADER_ONLY', 'TIER1_STATIC_LIB']
 
+	# MSVC does not predefine __x86_64__; like BugfixedHL's CMake, define
+	# X64BITS from the pointer size so platform.h and steamtypes.h agree.
+	if bld.env.DEST_SIZEOF_VOID_P and int( bld.env.DEST_SIZEOF_VOID_P ) > 4:
+		defines += ['X64BITS']
+
 	if bld.env.DEST_OS in ['win32', 'dos']:
 		# Valve sources expect WIN32 (no underscore) project-wide on Windows
 		defines += ['WIN32']

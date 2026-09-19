@@ -23,7 +23,20 @@
 //-----------------------------------------------------------------------------
 // Time
 //-----------------------------------------------------------------------------
-#ifdef POSIX
+#ifdef _WIN32
+#include <windows.h>
+double Plat_FloatTime( void )
+{
+	static LARGE_INTEGER s_freq = { 0 };
+	LARGE_INTEGER now;
+	if ( !s_freq.QuadPart )
+		QueryPerformanceFrequency( &s_freq );
+	QueryPerformanceCounter( &now );
+	if ( !s_freq.QuadPart )
+		return 0.0;
+	return (double)now.QuadPart / (double)s_freq.QuadPart;
+}
+#elif defined( POSIX )
 double Plat_FloatTime( void )
 {
 	struct timespec ts;
