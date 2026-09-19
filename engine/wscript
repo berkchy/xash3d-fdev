@@ -267,6 +267,11 @@ def build(bld):
 			source += bld.path.ant_glob('client/**/*.c')
 			source += bld.path.ant_glob('client/vgui/vgui2/*.cpp')
 			libs += ['bzip2', 'MultiEmulator', 'opus', 'opusfile', 'vorbis', 'vorbisfile', 'vgui2']
+			# vgui2 public headers for the engine-side interfaces above;
+			# explicit (in addition to use=vgui2 export_includes) so the
+			# compile flags never depend on use-propagation alone
+			includes += ['../3rdparty/vgui2/public', '../3rdparty/vgui2/public/tier0',
+				'../3rdparty/vgui2/public/tier1', '../3rdparty/vgui2/public/common']
 
 		# Android port is linked differently
 		if bld.env.DEST_OS == 'android':
