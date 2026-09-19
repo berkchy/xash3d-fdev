@@ -7,8 +7,30 @@
 
 #include <cstring>
 
-#include "common.h"
+// Valve tier0 base first: DLL_EXPORT, int64/uint64, OVERRIDE.
+#include <tier0/platform.h>
+
+// Standalone engine key numbers (no dependencies).
 #include "keydefs.h"
+
+// Engine runtime imports. Declared manually on purpose: engine's own
+// headers are not C++-clean and collide with Valve headers (e.g. both
+// define the PLATFORM_H include guard), so they are never included here.
+// The struct only mirrors the first fields of engine's convar_s (the
+// public prefix is ABI-frozen); only ->value is read.
+extern "C"
+{
+void Con_Printf( const char *fmt, ... );
+typedef struct host_convar_s
+{
+	char *name;
+	char *string;
+	unsigned int flags;
+	float value;
+	struct host_convar_s *next;
+} host_convar_t;
+host_convar_t *Cvar_Get( const char *name, const char *value, unsigned int flags, const char *desc );
+}
 
 #include <vgui/IVGui.h>
 #include <vgui/IPanel.h>
@@ -212,7 +234,7 @@ static struct
 	vgui2::VPANEL embedded;
 	vgui2::HScheme scheme;
 	CDemoDialog *dialog;
-	convar_t *demoCvar;
+	host_convar_t *demoCvar;
 	int mouseX, mouseY;
 } s_host;
 

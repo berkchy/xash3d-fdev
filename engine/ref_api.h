@@ -133,6 +133,9 @@ typedef enum
 } demo_mode;
 
 typedef enum window_mode_e
+#ifdef __cplusplus
+: int
+#endif
 {
 	WINDOW_MODE_WINDOWED = 0,
 	WINDOW_MODE_FULLSCREEN,
@@ -141,6 +144,9 @@ typedef enum window_mode_e
 } window_mode_t;
 
 typedef enum ref_window_type_e
+#ifdef __cplusplus
+: int
+#endif
 {
 	REF_WINDOW_TYPE_NULL = 0,
 	REF_WINDOW_TYPE_WIN32, // HWND
@@ -247,6 +253,9 @@ enum ref_defaultsprite_e
 // the order of first three is important!
 // so you can use this value in IEngineStudio.StudioIsHardware (but shouldn't)
 typedef enum ref_graphic_apis_e
+#ifdef __cplusplus
+: int
+#endif
 {
 	REF_SOFTWARE,	// hypothetical: just make a surface to draw on, in software
 	REF_GL,		// create GL context

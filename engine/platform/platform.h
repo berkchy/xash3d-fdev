@@ -373,6 +373,13 @@ typedef enum
 } rserr_t;
 
 struct vidmode_s;
+#ifdef __cplusplus
+// ISO C++ forbids forward references to enum types: opaque declarations
+// with fixed underlying type (the definitions in ref_api.h match with : int).
+enum window_mode_e : int;
+enum ref_window_type_e : int;
+enum ref_graphic_apis_e : int;
+#endif
 typedef enum window_mode_e window_mode_t;
 typedef enum ref_window_type_e ref_window_type_t;
 typedef enum ref_graphic_apis_e ref_graphic_apis_t;

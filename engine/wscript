@@ -303,6 +303,7 @@ def build(bld):
 					'client/vgui/vgui2'],
 				defines = vgui2eng_defines,
 				features = 'cxx',
+				use = [u for u in libs if u != 'vgui2engine'] + ['library_suffix_includes'],
 			)
 
 		# Android port is linked differently
