@@ -59,13 +59,11 @@ def build(bld):
 
 	defines += ['_DLL_EXT=' + dll_ext]
 
-	# MSVC: vgui message maps reinterpret member function pointers across
-	# virtually-inherited classes (Panel); this needs the general-purpose
-	# member pointer representation.
 	# NOTE: no -fno-rtti: vgui_controls uses dynamic_cast in several places.
+	# NOTE: no /vmg either: BugfixedHL builds this code on MSVC without it,
+	# and the MessageMap design (virtual Panel + __virtual_inheritance
+	# forward declaration) already forces max-size member pointers.
 	cxxflags = []
-	if bld.env.DEST_OS in ['win32', 'dos']:
-		cxxflags = ['/vmg']
 
 	bld.stlib(
 		source = source,
