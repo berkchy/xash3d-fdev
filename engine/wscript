@@ -297,7 +297,8 @@ def build(bld):
 			bld.objects(
 				source = bld.path.ant_glob('client/vgui/vgui2/vgui2_*.cpp'),
 				target = 'vgui2engine',
-				includes = includes + ['../3rdparty/vgui2/public', '../3rdparty/vgui2/public/tier0',
+				includes = includes + ['.', 'common', 'common/imagelib', '../common',
+					'../3rdparty/vgui2/public', '../3rdparty/vgui2/public/tier0',
 					'../3rdparty/vgui2/public/tier1', '../3rdparty/vgui2/public/common',
 					'client/vgui/vgui2'],
 				defines = vgui2eng_defines,
