@@ -8,6 +8,10 @@
 #ifndef VGUI2_BACKEND_H
 #define VGUI2_BACKEND_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct vgui2_backend_s
 {
 	// screen
@@ -58,5 +62,9 @@ typedef struct vgui2_backend_s
 // Implemented by the backend provider, consumed by the interface impls.
 void VGui2_SetBackend( const vgui2_backend_t *backend );
 const vgui2_backend_t *VGui2_GetBackend( void );
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif // VGUI2_BACKEND_H

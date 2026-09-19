@@ -1,16 +1,17 @@
-// vgui2_backend_engine.cpp - real engine backend for the VGUI2 GoldSource port.
+// vgui2_backend_engine.c - real engine backend for the VGUI2 GoldSource port.
 //
 // Wires the vgui2_backend_t interface to engine + ref_api functionality.
 // Coordinates are raw screen pixels (refState), matching GoldSource VGUI2
-// surface space. Built into the engine (waf); not part of unit tests.
+// surface space. Compiled as C (engine headers are not C++-clean).
+// Built into the engine (waf); not part of unit tests.
 
 #include "common.h"
 #include "client.h"
 #include "ref_common.h"
 #include "platform/platform.h"
 #include "cursor_type.h"
-#include "common/const.h"
-#include "vgui2/vgui2_backend.h"
+#include "const.h"
+#include "vgui2_backend.h"
 
 //-----------------------------------------------------------------------------
 static void ENGINE_GetScreenSize( int *wide, int *tall )
@@ -55,10 +56,11 @@ static void ENGINE_DrawTextured( float x, float y, float w, float h,
 
 static int ENGINE_LoadTextureRGBA( const char *name, const unsigned char *rgba, int wide, int tall )
 {
+	rgbdata_t pic;
+
 	if ( !name || !rgba || wide <= 0 || tall <= 0 )
 		return 0;
 
-	rgbdata_t pic;
 	memset( &pic, 0, sizeof( pic ));
 	pic.width = wide;
 	pic.height = tall;
@@ -72,16 +74,18 @@ static int ENGINE_LoadTextureRGBA( const char *name, const unsigned char *rgba, 
 
 static int ENGINE_LoadTextureFile( const char *path, int *wide, int *tall )
 {
+	int tex, w, h;
+
 	if ( wide ) *wide = 0;
 	if ( tall ) *tall = 0;
 	if ( !path || !path[0] )
 		return 0;
 
 	// NULL buffer makes the renderer load and decode the file itself
-	int tex = ref.dllFuncs.GL_LoadTexture( path, NULL, 0, TF_IMAGE );
+	tex = ref.dllFuncs.GL_LoadTexture( path, NULL, 0, TF_IMAGE );
 	if ( !tex )
 		return 0;
-	int w = 0, h = 0;
+	w = h = 0;
 	R_GetTextureParms( &w, &h, tex );
 	if ( wide ) *wide = w;
 	if ( tall ) *tall = h;
@@ -116,12 +120,15 @@ static cl_font_t *ENGINE_PickFont( int tall )
 {
 	cl_font_t *best = Con_GetFont( 0 );
 	int bestDiff = 1 << 30;
-	for ( int i = 0; i < 3; i++ )
+	int i;
+
+	for ( i = 0; i < 3; i++ )
 	{
 		cl_font_t *f = Con_GetFont( i );
+		int diff;
 		if ( !f || !f->valid )
 			continue;
-		int diff = abs( f->charHeight - tall );
+		diff = abs( f->charHeight - tall );
 		if ( diff < bestDiff )
 		{
 			bestDiff = diff;
@@ -160,12 +167,14 @@ static int ENGINE_UTF8Decode( const char **pp )
 
 static int ENGINE_DrawTextUTF8( int x, int y, int tall, const char *utf8, int r, int g, int b, int a )
 {
+	cl_font_t *font;
+	rgba_t color;
+
 	if ( !utf8 || !utf8[0] )
 		return 0;
-	cl_font_t *font = ENGINE_PickFont( tall );
+	font = ENGINE_PickFont( tall );
 	if ( !font )
 		return 0;
-	rgba_t color;
 	Vector4Set( color, r, g, b, a );
 	return CL_DrawString((float)x, (float)y, utf8, color, font, FONT_DRAW_UTF8 | FONT_DRAW_FORCECOL );
 }
@@ -176,8 +185,8 @@ static void ENGINE_GetTextSizeUTF8( int tall, const char *utf8, int *wide, int *
 	cl_font_t *font = ENGINE_PickFont( tall );
 	if ( font && utf8 )
 	{
-		hh = font->charHeight;
 		const char *s = utf8;
+		hh = font->charHeight;
 		while ( *s )
 		{
 			int ch = ENGINE_UTF8Decode( &s );
@@ -205,11 +214,13 @@ static int ENGINE_GetCharWidth( int tall, int ch )
 //-----------------------------------------------------------------------------
 static int ENGINE_LoadFile( const char *path, unsigned char **outBuf )
 {
+	int len = 0;
+	byte *buf;
+
 	if ( outBuf ) *outBuf = NULL;
 	if ( !path || !path[0] || !outBuf )
 		return -1;
-	int len = 0;
-	byte *buf = COM_LoadFile( path, 0, &len );
+	buf = COM_LoadFile( path, 0, &len );
 	if ( !buf || len <= 0 )
 		return -1;
 	*outBuf = buf;
@@ -272,14 +283,7 @@ static const vgui2_backend_t s_engineBackend =
 	ENGINE_Log,
 };
 
-extern "C" void VGui2_InitEngineBackend( void )
+void VGui2_InitEngineBackend( void )
 {
 	VGui2_SetBackend( &s_engineBackend );
-}
-
-extern "C" void *VGui2_EngineFactory( const char *name, int *returnCode )
-{
-	// backend is always valid once anyone asks for an interface
-	VGui2_SetBackend( &s_engineBackend );
-	return vgui2::VGui2_CreateInterface( name, returnCode );
 }

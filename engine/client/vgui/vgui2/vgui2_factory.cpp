@@ -50,3 +50,9 @@ void *VGui2_CreateInterface( const char *name, int *returnCode )
 }
 
 } // namespace vgui2
+
+// C-ABI entry point for game clients (declared manually on their side).
+extern "C" void *VGui2_EngineFactory( const char *name, int *returnCode )
+{
+	return vgui2::VGui2_CreateInterface( name, returnCode );
+}
