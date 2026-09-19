@@ -6,6 +6,10 @@
 #include <cstdarg>
 #include <cstdlib>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "tier0/dbg.h"
 
 static SpewOutputFunc_t s_pSpewOutputFunc = nullptr;
@@ -21,6 +25,13 @@ void _AssertValidWritePtr( void *ptr, int count )
 void AssertValidStringPtr( const char *ptr, int maxchar )
 {
 }
+
+#ifdef _WIN32
+bool Plat_IsInDebugSession()
+{
+	return IsDebuggerPresent() != FALSE;
+}
+#endif
 
 void SpewOutputFunc( SpewOutputFunc_t func )
 {
