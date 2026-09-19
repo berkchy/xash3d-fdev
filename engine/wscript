@@ -296,7 +296,7 @@ def build(bld):
 					vgui2eng_defines += ['LINUX', '_LINUX']
 			bld.objects(
 				source = bld.path.ant_glob('client/vgui/vgui2/vgui2_*.cpp') + \
-					bld.path.ant_glob('../../3rdparty/vgui2/runtime/vgui2_memalloc.cpp'),
+					bld.path.ant_glob('../3rdparty/vgui2/runtime/vgui2_memalloc.cpp'),
 				target = 'vgui2engine',
 				includes = includes + ['../3rdparty/vgui2/public', '../3rdparty/vgui2/public/tier0',
 					'../3rdparty/vgui2/public/tier1', '../3rdparty/vgui2/public/common',
@@ -325,6 +325,13 @@ def build(bld):
 			install_path = None
 
 		linkflags = []
+
+		if bld.env.DEST_OS == 'android':
+			# the engine now contains C++ (vgui2); the NDK link does not
+			# pull the C++ runtime by itself, so link it statically in.
+			# (static: no extra .so to package into the APK, and we throw
+			# nothing across library boundaries)
+			linkflags += ['-lc++_static']
 
 		if bld.env.DEST_OS == 'emscripten':
 			linkflags = ['-sINITIAL_MEMORY=134217728', '-sALLOW_MEMORY_GROWTH=1', '-sSTACK_SIZE=16777216']
