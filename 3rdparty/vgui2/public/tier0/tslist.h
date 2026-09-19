@@ -25,7 +25,18 @@
 #include "xbox/xbox_core.h"
 #else
 #define WIN32_LEAN_AND_MEAN
+// Exclude winuser.h/GDI entirely: their A/W macros (PostMessage,
+// SendMessage, GetClassName, CreateFont, ...) collide with vgui2
+// identifiers. Only winnt.h SLIST support is needed below.
+#define NOUSER
+#define NOGDI
 #include <windows.h>
+// Belt and suspenders in case winuser.h came in through another header.
+#undef PostMessage
+#undef SendMessage
+#undef GetClassName
+#undef GetCurrentDirectory
+#undef CreateFont
 #endif
 #endif // _WIN32
 

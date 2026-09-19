@@ -275,11 +275,11 @@ def build(bld):
 				'../3rdparty/vgui2/public', '../3rdparty/vgui2/public/tier0',
 				'../3rdparty/vgui2/public/tier1', '../3rdparty/vgui2/public/common']
 
-		# Engine-side VGUI2 interfaces + IMemAlloc. Built WITHOUT
-		# NO_MALLOC_OVERRIDE (unlike the static lib above) so Valve's
-		# IMemAlloc/g_pMemAlloc declarations stay visible; vgui2_memalloc.cpp
-		# provides the g_pMemAlloc definition. The C backend stays in the
-		# main engine sources (picked up by client/**/*.c).
+		# Engine-side VGUI2 interfaces. Built WITHOUT NO_MALLOC_OVERRIDE
+		# (unlike the static lib above) so Valve's IMemAlloc/g_pMemAlloc
+		# declarations stay visible; vgui2_base.cpp provides the
+		# g_pMemAlloc definition. The C backend stays in the main engine
+		# sources (picked up by client/**/*.c).
 		if not bld.env.DEDICATED:
 			vgui2eng_defines = ['MATHLIB_HEADER_ONLY', 'TIER1_STATIC_LIB', 'STATIC_TIER0']
 			if bld.env.DEST_SIZEOF_VOID_P and int( bld.env.DEST_SIZEOF_VOID_P ) > 4:
@@ -295,8 +295,7 @@ def build(bld):
 				else:
 					vgui2eng_defines += ['LINUX', '_LINUX']
 			bld.objects(
-				source = bld.path.ant_glob('client/vgui/vgui2/vgui2_*.cpp') + \
-					bld.path.ant_glob('../3rdparty/vgui2/runtime/vgui2_memalloc.cpp'),
+				source = bld.path.ant_glob('client/vgui/vgui2/vgui2_*.cpp'),
 				target = 'vgui2engine',
 				includes = includes + ['../3rdparty/vgui2/public', '../3rdparty/vgui2/public/tier0',
 					'../3rdparty/vgui2/public/tier1', '../3rdparty/vgui2/public/common',
