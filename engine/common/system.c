@@ -653,13 +653,25 @@ Sys_GetNativeObject
 Get platform-specific native object
 ==================
 */
+#if !XASH_DEDICATED
+// Implemented by the engine-side VGUI2 layer (vgui2_factory.cpp).
+void *VGui2_EngineFactory( const char *name, int *returnCode );
+#endif
+
 void *Sys_GetNativeObject( const char *obj )
 {
 	if( COM_StringEmptyOrNULL( obj ))
 		return NULL;
-
 	if( !Q_strcmp( obj, "MenuFactory" ))
 		return UI_GetMenuFactory();
+
+#if !XASH_DEDICATED
+	// Engine-side VGUI2 GoldSource interfaces (vgui2_factory.cpp).
+	// The client resolves this through the mobile API's
+	// pfnGetNativeObject and queries versioned interfaces from it.
+	if( !Q_strcmp( obj, "VGui2Factory" ))
+		return VGui2_EngineFactory;
+#endif
 
 	void *ptr = FS_GetNativeObject( obj );
 
