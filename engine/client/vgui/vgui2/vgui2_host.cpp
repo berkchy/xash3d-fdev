@@ -44,6 +44,13 @@ host_convar_t *Cvar_Get( const char *name, const char *value, unsigned int flags
 #include <vgui_controls/Frame.h>
 #include <vgui_controls/Label.h>
 #include <vgui_controls/Button.h>
+#include <vgui_controls/Controls.h>
+
+// Tier connect: fills the vgui_controls globals (g_pVGui, g_pVGuiPanel,
+// g_pVGuiSurface, ...) from our factory. Must run before any Valve control
+// is constructed.
+#include <tier1/interface.h>
+#include <tier2/tier2.h>
 
 #include "vgui2_backend.h"
 #include "vgui2_internal.h"
@@ -258,6 +265,17 @@ extern "C" void VGui2_HostInit( void )
 	vgui2::VGui2_BindKeyValuesSystem();
 
 	VGui2_InitEngineBackend();
+
+	// Publish the engine implementations into the vgui_controls globals
+	// (ivgui(), ipanel(), surface(), scheme(), ...). Valve Panel/Frame/
+	// Label/Button constructors dereference these; without this step any
+	// `new Frame` segfaults in Panel::Init (the vgui2_demo device crash).
+	// Same pattern the game client uses in CSB_SetEngineFactory.
+	CreateInterfaceFn engineFactory = vgui2::VGui2_CreateInterface;
+	ConnectTier1Libraries( &engineFactory, 1 );
+	ConnectTier2Libraries( &engineFactory, 1 );
+	if ( !vgui2::VGui_InitInterfacesList( "Engine", &engineFactory, 1 ))
+		Con_Printf( "VGUI2 host: VGui_InitInterfacesList failed\n" );
 
 	vgui2::IVGui *vgui = vgui2::VGui2_GetVGuiInterface();
 	vgui2::IPanel *panel = vgui2::VGui2_GetPanelInterface();
