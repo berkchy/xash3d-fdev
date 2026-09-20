@@ -304,6 +304,12 @@ void VGui_RegisterCvars( void )
 {
 	Cvar_RegisterVariable( &vgui_utf8 );
 	Cvar_RegisterVariable( &vgui_key_layout );
+
+	// engine-side VGUI2 host: registers vgui2_demo and prepares the
+	// embedded panel. Safe pre-video (idempotent); screen size is
+	// refreshed every HostFrame. This runs at engine boot, unlike
+	// VGui_Startup which needs a loaded client DLL.
+	VGui2_HostInit();
 }
 
 static const vguiapi_t gEngfuncs =
