@@ -44,6 +44,10 @@ IBaseInterface *VGui2_GetSchemeLoaderInterface();
 const char *VGui2_KeyValuesVersion();
 IBaseInterface *VGui2_GetKeyValuesInterface();
 
+// binds the tier2 KeyValues wrapper to the system above; must run before the
+// first KeyValues is created (vgui2_keyvalues.cpp)
+void VGui2_BindKeyValuesSystem();
+
 // factory entry point (vgui2_factory.cpp)
 void *VGui2_CreateInterface( const char *name, int *returnCode );
 

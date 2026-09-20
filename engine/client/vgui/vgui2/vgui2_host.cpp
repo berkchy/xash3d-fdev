@@ -251,6 +251,12 @@ extern "C" void VGui2_HostInit( void )
 	if ( s_host.inited )
 		return;
 
+	// KeyValues (scheme parsing, vgui2 controls) allocates through the tier2
+	// wrapper, which has to be bound to the engine's KeyValues003 before the
+	// first allocation: nothing else runs this early in the engine, so without
+	// this the scheme load below would call through a NULL interface.
+	vgui2::VGui2_BindKeyValuesSystem();
+
 	VGui2_InitEngineBackend();
 
 	vgui2::IVGui *vgui = vgui2::VGui2_GetVGuiInterface();

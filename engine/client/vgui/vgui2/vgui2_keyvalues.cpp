@@ -15,6 +15,11 @@
 #include "vgui2_backend.h"
 #include "vgui2_internal.h"
 
+// The KeyValues system binding lives in the tier2 sources; its header
+// (3rdparty/vgui2/src/tier2/KeyValuesCompat.h) is not on the engine's include
+// path, so the single entry point needed here is declared manually.
+bool KV_InitKeyValuesSystem( CreateInterfaceFn *pFactories, int iNumFactories );
+
 namespace vgui2
 {
 
@@ -117,5 +122,42 @@ static CKeyValuesSystem s_KeyValuesSystem;
 
 const char *VGui2_KeyValuesVersion() { return IKEYVALUES_INTERFACE_VERSION; }
 IBaseInterface *VGui2_GetKeyValuesInterface() { return &s_KeyValuesSystem; }
+
+//-----------------------------------------------------------------------------
+// Binds the tier2 KeyValues wrapper (KeyValuesCompat.cpp) to this
+// engine-provided implementation.
+//
+// KeyValues never allocates on its own: KeyValues::operator new and the key
+// name symbol table both go through keyvalues(), which only forwards to an
+// IKeyValues ("KeyValues003") instance once a factory handed one over. Game UI
+// modules do that from ConnectTier2Libraries(), but the engine-side VGUI2 host
+// runs at CL_InitLocal - before any client module is loaded - so the engine has
+// to bind its own implementation first. Without that the first KeyValues
+// allocation (parsing the scheme) calls through a NULL pointer and the process
+// dies with SIGSEGV at 0x0 inside AllocKeyValuesMemory.
+//-----------------------------------------------------------------------------
+static void *VGui2_KeyValuesFactory( const char *name, int *returnCode )
+{
+	if ( returnCode )
+		*returnCode = IFACE_FAILED;
+
+	if ( !name || strcmp( name, IKEYVALUES_INTERFACE_VERSION ))
+		return NULL;
+
+	if ( returnCode )
+		*returnCode = IFACE_OK;
+
+	return &s_KeyValuesSystem;
+}
+
+void VGui2_BindKeyValuesSystem()
+{
+	// Idempotent: the wrapper keeps the first implementation it was given, so
+	// calling this more than once (or after a game module bound one) is
+	// harmless.
+	CreateInterfaceFn factories[1] = { VGui2_KeyValuesFactory };
+
+	KV_InitKeyValuesSystem( factories, 1 );
+}
 
 } // namespace vgui2
