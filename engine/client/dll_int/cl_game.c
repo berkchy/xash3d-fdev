@@ -1765,7 +1765,15 @@ static int GAME_EXPORT pfnHookUserMsg( const char *pszName, pfnUserMsgHook pfn )
 	{
 		// see if already hooked
 		if( !Q_stricmp( clgame.msg[i].name, pszName ))
+		{
+			// the entry may have been created earlier by CL_LinkUserMessage()
+			// (the server links name+number via svc_usermessage before the
+			// client got around to hooking it): make sure the dispatch func
+			// gets installed anyway instead of silently leaving it NULL.
+			if( !clgame.msg[i].func )
+				clgame.msg[i].func = pfn;
 			return 1;
+		}
 	}
 
 	if( i == MAX_USER_MESSAGES )
