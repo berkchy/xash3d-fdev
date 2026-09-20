@@ -571,4 +571,30 @@ HScheme VGui2_LoadSchemeFromBuffer( const char *buffer, const char *tag )
 	return s_SchemeManagerImpl.AddScheme( tag ? tag : "memory", scheme );
 }
 
+//-----------------------------------------------------------------------------
+// Extra engine-side interface: lets game clients load their own schemes
+// from memory buffers (the stock ISchemeManager only loads from files).
+//-----------------------------------------------------------------------------
+class CSchemeLoader : public IBaseInterface
+{
+public:
+	virtual HScheme LoadSchemeFromBuffer( const char *buffer, const char *tag ) = 0;
+};
+
+#define VGUI_SCHEMELOADER_INTERFACE_VERSION "VGUI_SchemeLoader001"
+
+class CSchemeLoaderImpl : public CSchemeLoader
+{
+public:
+	HScheme LoadSchemeFromBuffer( const char *buffer, const char *tag ) OVERRIDE
+	{
+		return VGui2_LoadSchemeFromBuffer( buffer, tag );
+	}
+};
+
+static CSchemeLoaderImpl s_SchemeLoaderImpl;
+
+const char *VGui2_SchemeLoaderVersion() { return VGUI_SCHEMELOADER_INTERFACE_VERSION; }
+IBaseInterface *VGui2_GetSchemeLoaderInterface() { return &s_SchemeLoaderImpl; }
+
 } // namespace vgui2

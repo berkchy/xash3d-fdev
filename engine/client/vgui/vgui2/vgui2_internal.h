@@ -33,8 +33,12 @@ VPANEL VGui2_GetPanelHandle( int index );
 // scheme <-> surface wiring (vgui2_scheme.cpp)
 void VGui2_SetSchemeSurface( ISurface *surface );
 
-// parse a scheme from a memory buffer (vgui2_scheme.cpp)
+// parse a scheme from a memory buffer, engine-internal (vgui2_scheme.cpp)
 HScheme VGui2_LoadSchemeFromBuffer( const char *buffer, const char *tag );
+
+// scheme loader for game clients (vgui2_scheme.cpp)
+const char *VGui2_SchemeLoaderVersion();
+IBaseInterface *VGui2_GetSchemeLoaderInterface();
 
 // KeyValues003 system (vgui2_keyvalues.cpp)
 const char *VGui2_KeyValuesVersion();

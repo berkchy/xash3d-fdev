@@ -43,6 +43,8 @@ void *VGui2_CreateInterface( const char *name, int *returnCode )
 		return VGui2_GetSystemInterface();
 	if ( !strcmp( name, VGui2_KeyValuesVersion() ))
 		return VGui2_GetKeyValuesInterface();
+	if ( !strcmp( name, VGui2_SchemeLoaderVersion() ))
+		return VGui2_GetSchemeLoaderInterface();
 
 	if ( returnCode )
 		*returnCode = IFACE_FAILED;
