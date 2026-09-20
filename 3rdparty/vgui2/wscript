@@ -42,7 +42,7 @@ def build(bld):
 		'runtime/*.cpp',
 	])
 
-	defines = ['NO_MALLOC_OVERRIDE', 'MATHLIB_HEADER_ONLY', 'TIER1_STATIC_LIB', 'STATIC_TIER0']
+	defines = ['NO_MALLOC_OVERRIDE', 'MATHLIB_HEADER_ONLY', 'TIER1_STATIC_LIB', 'STATIC_TIER0', 'NO_VCR']
 
 	# MSVC does not predefine __x86_64__; like BugfixedHL's CMake, define
 	# X64BITS from the pointer size so platform.h and steamtypes.h agree.

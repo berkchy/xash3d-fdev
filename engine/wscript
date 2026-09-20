@@ -281,7 +281,7 @@ def build(bld):
 		# g_pMemAlloc definition. The C backend stays in the main engine
 		# sources (picked up by client/**/*.c).
 		if not bld.env.DEDICATED:
-			vgui2eng_defines = ['MATHLIB_HEADER_ONLY', 'TIER1_STATIC_LIB', 'STATIC_TIER0']
+			vgui2eng_defines = ['MATHLIB_HEADER_ONLY', 'TIER1_STATIC_LIB', 'STATIC_TIER0', 'NO_VCR']
 			if bld.env.DEST_SIZEOF_VOID_P and int( bld.env.DEST_SIZEOF_VOID_P ) > 4:
 				vgui2eng_defines += ['X64BITS']
 			if bld.env.DEST_OS in ['win32', 'dos']:
