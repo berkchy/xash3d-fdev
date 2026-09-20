@@ -20,6 +20,27 @@ GNU General Public License for more details.
 #include "platform/android/lib_android.h"
 #include "platform/android/dlsym-weak.h" // Android < 5.0
 
+// The game client may carry private shared-library dependencies that live
+// next to it in the *game* APK (e.g. libvgui2client.so next to the client
+// lib). The OS resolves DT_NEEDED in the engine's linker namespace, which
+// does not see the game APK's lib dir, so pre-load the sibling by absolute
+// path: an already-loaded library satisfies DT_NEEDED without a namespace
+// search. Best-effort: silently ignored when the sibling is absent.
+static void ANDROID_PreloadSibling( const char *libpath )
+{
+	char sibling[MAX_SYSPATH];
+	char *slash;
+
+	Q_strncpy( sibling, libpath, sizeof( sibling ));
+	slash = (char *)Q_strrchr( sibling, '/' );
+	if( !slash )
+		return;
+
+	Q_strncpy( slash + 1, "libvgui2client.so", sizeof( sibling ) - ( slash + 1 - sibling ));
+	if( dlopen( sibling, RTLD_NOW ))
+		Con_Reportf( "%s: pre-loaded \"%s\"\n", __func__, sibling );
+}
+
 void *ANDROID_LoadLibrary( const char *path )
 {
 	const char *name = COM_FileWithoutPath( path );
@@ -34,6 +55,8 @@ void *ANDROID_LoadLibrary( const char *path )
 		Q_snprintf( fullpath, sizeof( fullpath ), "%s/%s", gamelibdir, name );
 
 		Con_Reportf( "%s: trying APK path \"%s\"\n", __func__, fullpath );
+
+		ANDROID_PreloadSibling( fullpath );
 
 		void *handle = dlopen( fullpath, RTLD_NOW );
 		if( handle )
@@ -56,6 +79,8 @@ void *ANDROID_LoadLibrary( const char *path )
 			char libpath[MAX_SYSPATH];
 			Q_strncpy( libpath, hInst->fullPath, sizeof( libpath ));
 			Mem_Free( hInst );
+
+			ANDROID_PreloadSibling( libpath );
 
 			void *handle = dlopen( libpath, RTLD_NOW );
 			if( handle )
