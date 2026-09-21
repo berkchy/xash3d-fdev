@@ -19,6 +19,9 @@
 #include "vgui2_backend.h"
 #include "vgui2_internal.h"
 
+// TEMP-DIAG(berkchy): engine console import (same pattern as vgui2_host.cpp).
+extern "C" void Con_Printf( const char *fmt, ... );
+
 namespace vgui2
 {
 
@@ -535,6 +538,13 @@ public:
 	void PaintTraverse( VPANEL vguiPanel, bool forceRepaint, bool allowForce ) OVERRIDE
 	{
 		VPanelData *p = s_Panels.Get( vguiPanel );
+		// TEMP-DIAG(berkchy): trace paint gates on device.
+		{
+			static int s_nPT = 0;
+			if ( s_nPT < 4 )
+				Con_Printf( "VGUI2-DIAG: IPanel::PaintTraverse #%d vp=%u have=%d visible=%d\n",
+					++s_nPT, (unsigned int)vguiPanel, p ? 1 : 0, ( p && p->visible ) ? 1 : 0 );
+		}
 		if ( p && p->client && p->visible )
 			p->client->PaintTraverse( forceRepaint, allowForce );
 	}
