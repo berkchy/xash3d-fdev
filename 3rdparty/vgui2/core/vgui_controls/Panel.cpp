@@ -1141,20 +1141,6 @@ void Panel::OnChildSettingsApplied( KeyValues *pInResourceData, Panel *pChild  )
 //-----------------------------------------------------------------------------
 void Panel::PaintTraverse( bool repaint, bool allowForce )
 {
-	// TEMP-DIAG(berkchy): trace paint gates on device. Revert after diagnosis.
-	{
-		static int s_nVPT = 0;
-		if ( s_nVPT < 4 )
-		{
-			extern void Con_Printf( const char *fmt, ... );
-			int cx0 = 0, cy0 = 0, cx1 = 0, cy1 = 0;
-			ipanel()->GetClipRect( GetVPanel(), cx0, cy0, cx1, cy1 );
-			Con_Printf( "VGUI2-DIAG: Panel::PaintTraverse #%d vis=%d repaint=%d allowForce=%d clip=%d,%d,%d,%d needrepaint=%d\n",
-				++s_nVPT, IsVisible() ? 1 : 0, repaint ? 1 : 0, allowForce ? 1 : 0,
-				cx0, cy0, cx1, cy1, _flags.IsFlagSet( NEEDS_REPAINT ) ? 1 : 0 );
-		}
-	}
-
 	if ( m_bWorldPositionCurrentFrame )
 	{
 		surface()->SolveTraverse( GetVPanel() );
