@@ -539,29 +539,24 @@ public:
 	void PaintTraverse( VPANEL vguiPanel, bool forceRepaint, bool allowForce ) OVERRIDE
 	{
 		VPanelData *p = s_Panels.Get( vguiPanel );
-		// TEMP-DIAG(berkchy): trace paint gates on device (engine-side only:
-		// the vgui2 static lib cannot reference Con_Printf, it breaks
-		// unrelated link targets such as xash_tests).
+		if ( !p || !p->visible )
+			return;
+
+		if ( p->client )
 		{
-			static int s_nPT = 0;
-			if ( s_nPT < 4 )
-			{
-				int cx0 = 0, cy0 = 0, cx1 = 0, cy1 = 0;
-				int vis = 0;
-				if ( p && p->client )
-				{
-					// TEMP-DIAG: all engine-side panels derive from Panel.
-					vgui2::Panel *panel = static_cast<vgui2::Panel *>( p->client );
-					vis = panel->IsVisible() ? 1 : 0;
-					GetClipRect( vguiPanel, cx0, cy0, cx1, cy1 );
-				}
-				Con_Printf( "VGUI2-DIAG: IPanel::PaintTraverse #%d vp=%u have=%d pvis=%d cvis=%d repaint=%d allowForce=%d clip=%d,%d,%d,%d\n",
-					++s_nPT, (unsigned int)vguiPanel, p ? 1 : 0, ( p && p->visible ) ? 1 : 0, vis,
-					forceRepaint ? 1 : 0, allowForce ? 1 : 0, cx0, cy0, cx1, cy1 );
-			}
-		}
-		if ( p && p->client && p->visible )
+			// Normal panel: delegate to the client-side Panel::PaintTraverse
+			// which handles PushMakeCurrent / Paint / child iteration /
+			// PopMakeCurrent.
 			p->client->PaintTraverse( forceRepaint, allowForce );
+		}
+		else
+		{
+			// Root embedded panel (no client-side Panel object).
+			// Must manually traverse children so the demo dialog and any
+			// other engine-side panels actually get painted.
+			for ( int i = 0; i < p->children.Count(); i++ )
+				PaintTraverse( p->children[i], forceRepaint, allowForce );
+		}
 	}
 	void Repaint( VPANEL vguiPanel ) OVERRIDE
 	{
