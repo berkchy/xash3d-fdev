@@ -656,6 +656,11 @@ Host_Frame
 */
 void Host_Frame( double time )
 {
+	// TEMP-DIAG(berkchy): black-screen-after-kill hang triage
+	static int s_nFrameDiag = 0;
+	if( !s_nFrameDiag++ )
+		Con_Printf( "DIAG: first Host_Frame\n" );
+
 	// decide the simulation time
 	if( !Host_FilterTime( time ))
 		return;
@@ -1288,6 +1293,8 @@ int EXPORT Host_Main( int argc, char **argv, const char *progname, int bChangeGa
 		// exec all files from userconfig.d
 		Cbuf_AddText( "userconfigd\n" );
 		Cbuf_Execute();
+		// TEMP-DIAG(berkchy): black-screen-after-kill hang triage
+		Con_Printf( "DIAG: boot userconfigd done\n" );
 		break;
 	case HOST_DEDICATED:
 		// allways parse commandline in dedicated-mode
@@ -1297,7 +1304,11 @@ int EXPORT Host_Main( int argc, char **argv, const char *progname, int bChangeGa
 
 	host.change_game = false;	// done
 	Cbuf_ExecStuffCmds();	// execute stuffcmds (commandline)
+	// TEMP-DIAG(berkchy): black-screen-after-kill hang triage
+	Con_Printf( "DIAG: boot stuffcmds done\n" );
 	SCR_CheckStartupVids();	// must be last
+	// TEMP-DIAG(berkchy): black-screen-after-kill hang triage
+	Con_Printf( "DIAG: boot startupvids done\n" );
 
 #ifndef XASH_DEDICATED
 	IN_GyroCheckAvailability();
