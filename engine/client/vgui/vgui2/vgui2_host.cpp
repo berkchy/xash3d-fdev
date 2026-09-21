@@ -288,6 +288,8 @@ extern "C" void VGui2_HostInit( void )
 
 	int wide = 640, tall = 480;
 	surface->GetScreenSize( wide, tall );
+	// TEMP-DIAG(berkchy): prove backend screen size on device.
+	Con_Printf( "VGUI2-DIAG: screen %dx%d\n", wide, tall );
 	panel->SetPos( s_host.embedded, 0, 0 );
 	panel->SetSize( s_host.embedded, wide, tall );
 	panel->SetVisible( s_host.embedded, true );
@@ -323,6 +325,8 @@ extern "C" void VGui2_HostFrame( void )
 	{
 		s_host.dialog = new CDemoDialog();
 		vgui2::VPANEL vp = s_host.dialog->GetVPanel();
+		// TEMP-DIAG(berkchy): prove creation path runs on device.
+		Con_Printf( "VGUI2-DIAG: demo dialog created vp=%u\n", (unsigned int)vp );
 		panel->SetParent( vp, s_host.embedded );
 		s_host.dialog->MoveToCenterOfScreen();
 		s_host.dialog->Activate();

@@ -44,6 +44,12 @@ static void ENGINE_SetupDrawing( int forRect )
 
 static void ENGINE_DrawFilled( float x, float y, float w, float h, int r, int g, int b, int a )
 {
+	// TEMP-DIAG(berkchy): prove the paint path is reached on device.
+	// Remove once the demo dialog is visible.
+	static int s_nFill = 0;
+	if ( s_nFill < 3 )
+		Con_Printf( "VGUI2-DIAG: DrawFilled #%d x=%.0f y=%.0f w=%.0f h=%.0f rgba=%d,%d,%d,%d\n",
+			++s_nFill, x, y, w, h, r, g, b, a );
 	ref.dllFuncs.FillRGBA( kRenderTransTexture, x, y, w, h, (byte)r, (byte)g, (byte)b, (byte)a );
 }
 
