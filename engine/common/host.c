@@ -83,6 +83,7 @@ CVAR_DEFINE_AUTO( host_allow_materials, "0", FCVAR_LATCH|FCVAR_ARCHIVE, "allow t
 CVAR_DEFINE( con_gamemaps, "con_mapfilter", "1", FCVAR_ARCHIVE, "when true show only maps in game folder" );
 CVAR_DEFINE_AUTO( cl_background, "0", FCVAR_READ_ONLY, "if set to 1, client running a background map" );
 CVAR_DEFINE_AUTO( sv_background, "0", FCVAR_READ_ONLY, "if set to 1, server running a background map" );
+CVAR_DEFINE_AUTO( host_skipframes, "0", FCVAR_ARCHIVE|FCVAR_FILTERABLE, "skip render frames to keep game logic at full speed (0=off, 1=on)" );
 
 typedef struct feature_message_s
 {
@@ -510,9 +511,9 @@ static double Host_CalcFPS( void )
 	}
 	else if( Host_IsSinglePlayerGame( ))
 	{
-		// vsync is expected to limit the framerate, but some drivers
-		// ignore it, so never let the game run completely unlimited
-		fps = gl_vsync.value ? MAX_FPS_HARD : host_maxfps.value;
+		fps = host_maxfps.value;
+		if( fps == 0.0 )
+			fps = MAX_FPS_HARD;
 	}
 	else if( !SV_Active() && CL_Protocol() == PROTO_GOLDSRC && cls.state != ca_disconnected && cls.state < ca_validate )
 	{
@@ -520,18 +521,11 @@ static double Host_CalcFPS( void )
 	}
 	else
 	{
-		const double max_fps = fps_override.value ? MAX_FPS_HARD : MAX_FPS_SOFT;
+		fps = host_maxfps.value;
+		if( fps == 0.0 )
+			fps = MAX_FPS_HARD;
 
-		if( gl_vsync.value )
-			fps = max_fps;
-		else
-		{
-			fps = host_maxfps.value;
-			if( fps == 0.0 )
-				fps = max_fps;
-
-			fps = bound( MIN_FPS, fps, max_fps );
-		}
+		fps = bound( MIN_FPS, fps, MAX_FPS_HARD );
 	}
 #endif
 
@@ -1206,6 +1200,7 @@ int EXPORT Host_Main( int argc, char **argv, const char *progname, int bChangeGa
 	Cvar_RegisterVariable( &host_gameloaded );
 	Cvar_RegisterVariable( &host_clientloaded );
 	Cvar_RegisterVariable( &host_limitlocal );
+	Cvar_RegisterVariable( &host_skipframes );
 	Cvar_RegisterVariable( &con_gamemaps );
 	Cvar_RegisterVariable( &sys_timescale );
 	Cvar_RegisterVariable( &sv_hibernate_when_empty );
