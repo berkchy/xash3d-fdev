@@ -2036,8 +2036,8 @@ void Con_DrawConsole( void )
 		{
 			if( con.vislines )
 				Con_DrawSolidConsole( con.vislines );
-			else if( cls.state == ca_active && ( cls.key_dest == key_game || cls.key_dest == key_message ) && !cls.timedemo )
-				Con_DrawNotify(); // draw notify lines
+			// Con_DrawNotify removed: was drawing console text overlay at
+			// top-left every frame during gameplay (user requested removal).
 		}
 		break;
 	}
