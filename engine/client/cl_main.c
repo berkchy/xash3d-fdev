@@ -2848,6 +2848,10 @@ static void CL_ServerList( netadr_t from, sizebuf_t *msg )
 
 		NET_Config( true, false ); // allow remote
 		NET_QueryServerByAddress( servadr, proto );
+
+		// Xash masters may list GoldSrc servers too, probe them as well
+		if( proto == PROTO_CURRENT )
+			NET_QueryServerByAddress( servadr, PROTO_GOLDSRC );
 	}
 
 	CL_NotifyServerListResponse();
