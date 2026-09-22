@@ -539,17 +539,18 @@ public:
 	void PaintTraverse( VPANEL vguiPanel, bool forceRepaint, bool allowForce ) OVERRIDE
 	{
 		VPanelData *p = s_Panels.Get( vguiPanel );
-		if ( !p || !p->visible )
+		if ( !p || !p->used || !p->visible )
 			return;
 
 		if ( p->client )
 		{
-			// Normal panel: delegate to the client-side Panel::PaintTraverse
-			// which handles PushMakeCurrent / Paint / child iteration /
-			// PopMakeCurrent.
-			p->client->PaintTraverse( forceRepaint, allowForce );
+			// Guard against dangling client pointer (panel freed during traversal).
+			IClientPanel *client = p->client;
+			p->client = NULL;  // detect if freed again during call
+			client->PaintTraverse( forceRepaint, allowForce );
+			p->client = client; // restore if still valid
 		}
-		else
+		else if ( p->used )
 		{
 			// Root embedded panel (no client-side Panel object).
 			// Must manually traverse children so the demo dialog and any

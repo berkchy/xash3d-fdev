@@ -3911,7 +3911,8 @@ void Host_ClientFrame( void )
 	// the incoming messages have been read
 	if( !SV_Active( )) CL_SendCommand ();
 
-	clgame.dllFuncs.pfnFrame( host.frametime );
+	if( clgame.dllFuncs.pfnFrame )
+		clgame.dllFuncs.pfnFrame( host.frametime );
 
 	// remember last received framenum
 	CL_SetLastUpdate ();
